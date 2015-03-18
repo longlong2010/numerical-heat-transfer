@@ -1,4 +1,5 @@
-public abstract class FTCS extends FiniteDifference {
+public class FTCS extends FiniteDifference {
+	
 	@Override
 	public void next() {
 

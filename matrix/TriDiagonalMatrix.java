@@ -20,6 +20,11 @@ public class TriDiagonalMatrix extends Matrix {
 			this.elements[i] = new double[3];
 		}
 	}
+	
+	@Override
+	public int getColumnSize() {
+		return this.getRowSize();
+	}
 
 	public static void main(String[] args) {
 		TriDiagonalMatrix m = new TriDiagonalMatrix(3);

@@ -17,11 +17,10 @@ public abstract class FTCS extends FiniteDifference {
 		int step = this.values.getRowSize();
 		int m = this.values.getColumnSize();
 		for (int i = 1; i < step; i++) {
-			for (int j = 1; j < m - 1; j ++) {
+			for (int j = 1; j < m - 1; j++) {
 				double v = next(i, j);
 				this.values.set(i, j, v);
 			}
 		}
-		values.print();
 	}
 }

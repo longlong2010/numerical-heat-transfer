@@ -17,4 +17,8 @@ public class Interval {
 	public double getRight() {
 		return b;
 	}
+
+	public double getLength() {
+		return b - a;
+	}
 }

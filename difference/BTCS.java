@@ -1,7 +1,13 @@
 package difference;
 
 import function.Function;
+
 import matrix.Matrix;
+import matrix.TriDiagonalMatrix;
+import matrix.vector.Vector;
+
+import equation.LinearEquations;
+
 import util.Interval;
 
 public abstract class BTCS extends FiniteDifference {
@@ -10,16 +16,33 @@ public abstract class BTCS extends FiniteDifference {
 		super(m, n, f, a, b, Ix, It);
 	}
 
-	protected abstract double[] next(int i);
+	protected abstract void next(TriDiagonalMatrix m, Vector b, int i, int j);
 
 	@Override
 	public void solve() {
 		int step = this.values.getRowSize();
-		int m = this.values.getColumnSize();
+		int size = this.values.getColumnSize();
+		double delta_t = getDeltaT();
+
 		for (int i = 1; i < step; i++) {
-			double[] v = next(i);
-			for (int j = 1; j < m - 1; j++) {
-				this.values.set(i, j, v[j - 1]);
+			TriDiagonalMatrix m = new TriDiagonalMatrix(size);
+			Vector b = new Vector(size);
+
+			double ti = It.getLeft() + i * delta_t;
+			m.set(0, 0, 1);
+			b.set(0, this.a.value(ti));
+			
+			for (int j = 1; j < size - 1; j++) {
+				next(m, b, i, j);
+			}
+
+			m.set(size - 1, size - 1, 1);
+			b.set(0, this.b.value(ti));
+
+			Vector v = LinearEquations.solve(m, b);
+			
+			for (int j = 1; j < size - 1; j++) {
+				this.values.set(i, j, v.get(j));
 			}
 		}
 	}

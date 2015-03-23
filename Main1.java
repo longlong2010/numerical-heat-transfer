@@ -1,6 +1,7 @@
 import function.Function;
 
 import util.Interval;
+import util.Grids;
 
 import matrix.Matrix;
 import matrix.vector.Vector;
@@ -48,7 +49,7 @@ public class Main1 {
 		
 		//grids param
 		int M = 100;
-		double sigma = 0.1;
+		double sigma = 0.4;
 		
 		Interval Ix = new Interval(0, 1);		
 		Interval It = new Interval(0, 1);
@@ -57,6 +58,9 @@ public class Main1 {
 		double delta_x = Ix.getLength() / M;
 		double delta_t = sigma * delta_x * delta_x / nu;
 		int N = (int) (It.getLength() / delta_t);
+
+		Matrix data;
+		Grids grids;
 
 		//FTCS
 		FTCS ftcs = new FTCS(N, M, f, a, b, Ix, It) {
@@ -71,6 +75,9 @@ public class Main1 {
 			}
 		};
 		ftcs.solve();
+		data = ftcs.getValues();
+		grids = ftcs.getGrids();
+		//data.print();
 
 		//BTCS
 		BTCS btcs = new BTCS(N, M, f, a, b, Ix, It) {
@@ -87,6 +94,10 @@ public class Main1 {
 			}
 		};
 		btcs.solve();
+
+		data = ftcs.getValues();
+		grids = ftcs.getGrids();
+		//data.print();
 
 		//CNCS
 		CNCS cncs = new CNCS(N, M, f, a, b, Ix, It) {
@@ -105,5 +116,9 @@ public class Main1 {
 			}
 		};
 		cncs.solve();
+		
+		data = ftcs.getValues();
+		grids = ftcs.getGrids();
+		data.print();
 	}
 }

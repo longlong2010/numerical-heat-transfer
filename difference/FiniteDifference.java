@@ -19,9 +19,6 @@ public abstract class FiniteDifference {
 
 	abstract public void solve();
 
-	public FiniteDifference() {
-	}
-
 	public FiniteDifference(int m, int n, Function f, Function a, Function b, Interval Ix, Interval It) {
 		values = new Matrix(m, n);
 		grids = new Grids(m, n);
@@ -57,5 +54,13 @@ public abstract class FiniteDifference {
 
 	public double getDeltaT() {
 		return It.getLength() / values.getRowSize();
+	}
+
+	public Matrix getValues() {
+		return values;
+	}
+
+	public Grids getGrids() {
+		return grids;
 	}
 }

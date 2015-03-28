@@ -7,11 +7,12 @@ import matrix.Matrix;
 import matrix.vector.Vector;
 import matrix.TriDiagonalMatrix;
 
-import equation.LinearEquations;
-
 import difference.FTCS;
 import difference.BTCS;
 import difference.CNCS;
+
+import java.io.PrintWriter;
+import java.io.File;
 
 public class Main1 {
 
@@ -46,79 +47,122 @@ public class Main1 {
 		};
 
 		double nu = 1;
-		
+
 		//grids param
 		int M = 100;
-		double sigma = 0.4;
-		
-		Interval Ix = new Interval(0, 1);		
-		Interval It = new Interval(0, 1);
-		
-		// x step, t step
-		double delta_x = Ix.getLength() / M;
-		double delta_t = sigma * delta_x * delta_x / nu;
-		int N = (int) (It.getLength() / delta_t);
 
-		Matrix data;
-		Grids grids;
+		double[] params1 = {0.1, 0.5, 1};
+		double[] params2 = {0.01, 0.1, 1};
 
-		//FTCS
-		FTCS ftcs = new FTCS(N, M, f, a, b, Ix, It) {
-			@Override
-			protected double next(int i, int j) {
-				double delta_x = getDeltaX();
-				double delta_t = getDeltaT();
-				double sigma = nu * delta_t / (delta_x * delta_x);
+		for (int i = 0; i < params1.length; i++) {
+			for (int j = 0; j < params2.length; j++) {
 
-				return values.get(i - 1, j) + 
-					sigma * (values.get(i - 1, j + 1) - 2 * values.get(i - 1, j) + values.get(i - 1, j - 1));
-			}
-		};
-		ftcs.solve();
-		data = ftcs.getValues();
-		grids = ftcs.getGrids();
-		//data.print();
+				double sigma = params1[i];
 
-		//BTCS
-		BTCS btcs = new BTCS(N, M, f, a, b, Ix, It) {
-			@Override
-			protected void next(TriDiagonalMatrix m, Vector b, int i, int j) {
-				double delta_x = getDeltaX();
-				double delta_t = getDeltaT();
-				double sigma = nu * delta_t / (delta_x * delta_x);
+				Interval Ix = new Interval(0, 1);		
+				Interval It = new Interval(0, params2[j]);
 
-				m.set(j, j - 1, sigma);
-				m.set(j, j, -(1 + 2 * sigma));
-				m.set(j, j + 1, sigma);
-				b.set(j, -values.get(i - 1, j));
-			}
-		};
-		btcs.solve();
+				// x step, t step
+				double delta_x = Ix.getLength() / M;
+				double delta_t = sigma * delta_x * delta_x / nu;
+				int N = (int) (It.getLength() / delta_t);
 
-		data = ftcs.getValues();
-		grids = ftcs.getGrids();
-		//data.print();
-
-		//CNCS
-		CNCS cncs = new CNCS(N, M, f, a, b, Ix, It) {
-			@Override
-			protected void next(TriDiagonalMatrix m, Vector b, int i, int j) {
-				double delta_x = getDeltaX();
-				double delta_t = getDeltaT();
-				double sigma = nu * delta_t / (delta_x * delta_x);
+				Matrix data;
+				Grids grids;
+				int row, col;
 				
-				m.set(j, j - 1, sigma / 2);
-				m.set(j, j, -(1 + sigma));
-				m.set(j, j + 1, sigma / 2);
+				PrintWriter writer;
 
-				b.set(j, -values.get(i - 1, j) 
-						-sigma * (values.get(i - 1, j + 1) - 2 * values.get(i - 1, j) + values.get(i - 1, j - 1)) / 2);
+				//FTCS
+				FTCS ftcs = new FTCS(N, M, f, a, b, Ix, It) {
+					@Override
+						protected double next(int i, int j) {
+							double delta_x = getDeltaX();
+							double delta_t = getDeltaT();
+							double sigma = nu * delta_t / (delta_x * delta_x);
+
+							return values.get(i - 1, j) + 
+								sigma * (values.get(i - 1, j + 1) - 2 * values.get(i - 1, j) + values.get(i - 1, j - 1));
+						}
+				};
+				ftcs.solve();
+				data = ftcs.getValues();
+				grids = ftcs.getGrids();
+				
+				row = data.getRowSize();
+				col = data.getColumnSize();
+
+				try {	
+					writer = new PrintWriter(new File("ftcs" + String.valueOf(i) + "-" + String.valueOf(j)));
+					for (int k = 0; k < col; k++) {
+						writer.println(data.get(row - 1, k));
+					}
+					writer.close();
+				} catch (Exception ex) {
+					ex.printStackTrace();
+				}
+
+
+				//BTCS
+				BTCS btcs = new BTCS(N, M, f, a, b, Ix, It) {
+					@Override
+						protected void next(TriDiagonalMatrix m, Vector b, int i, int j) {
+							double delta_x = getDeltaX();
+							double delta_t = getDeltaT();
+							double sigma = nu * delta_t / (delta_x * delta_x);
+
+							m.set(j, j - 1, sigma);
+							m.set(j, j, -(1 + 2 * sigma));
+							m.set(j, j + 1, sigma);
+							b.set(j, -values.get(i - 1, j));
+						}
+				};
+				btcs.solve();
+
+				data = btcs.getValues();
+				grids = btcs.getGrids();
+				
+				try {	
+					writer = new PrintWriter(new File("btcs" + String.valueOf(i) + "-" + String.valueOf(j)));
+					for (int k = 0; k < col; k++) {
+						writer.println(data.get(row - 1, k));
+					}
+					writer.close();
+				} catch (Exception ex) {
+					ex.printStackTrace();
+				}
+
+				//CNCS
+				CNCS cncs = new CNCS(N, M, f, a, b, Ix, It) {
+					@Override
+						protected void next(TriDiagonalMatrix m, Vector b, int i, int j) {
+							double delta_x = getDeltaX();
+							double delta_t = getDeltaT();
+							double sigma = nu * delta_t / (delta_x * delta_x);
+
+							m.set(j, j - 1, sigma / 2);
+							m.set(j, j, -(1 + sigma));
+							m.set(j, j + 1, sigma / 2);
+
+							b.set(j, -values.get(i - 1, j) 
+									-sigma * (values.get(i - 1, j + 1) - 2 * values.get(i - 1, j) + values.get(i - 1, j - 1)) / 2);
+						}
+				};
+				cncs.solve();
+
+				data = cncs.getValues();
+				grids = cncs.getGrids();
+				
+				try {	
+					writer = new PrintWriter(new File("cncs" + String.valueOf(i) + "-" + String.valueOf(j)));
+					for (int k = 0; k < col; k++) {
+						writer.println(data.get(row - 1, k));
+					}
+					writer.close();
+				} catch (Exception ex) {
+					ex.printStackTrace();
+				}
 			}
-		};
-		cncs.solve();
-		
-		data = ftcs.getValues();
-		grids = ftcs.getGrids();
-		data.print();
+		}
 	}
 }

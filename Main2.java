@@ -4,9 +4,7 @@ import util.Interval;
 
 import matrix.Matrix;
 
-import difference.LaxWendroff;
-import difference.LaxFriedrichs;
-import difference.WarmingBeam;
+import difference.FTCS;
 
 import java.io.PrintWriter;
 import java.io.File;
@@ -54,13 +52,12 @@ public class Main2 {
 		int row, col;
 		PrintWriter writer;
 
-
 		//Lax-Friedrichs
 		for (int k = 0; k < param.length; k++) {
 			Interval It = new Interval(0, param[k]);
 			int n = (int) (param[k] / delta_t);
 		
-			LaxFriedrichs lf = new LaxFriedrichs(n, m, u0, u1, u2, Ix, It) {
+			FTCS lf = new FTCS(n, m, u0, u1, u2, Ix, It) {
 				@Override
 				protected double next(int i, int j) {
 					return -c * (values.get(i - 1, j + 1) - values.get(i - 1, j - 1)) / 2 
@@ -90,7 +87,7 @@ public class Main2 {
 			Interval It = new Interval(0, param[k]);
 			int n = (int) (param[k] / delta_t);
 			
-			LaxWendroff lw = new LaxWendroff(n, m, u0, u1, u2, Ix, It) {
+			FTCS lw = new FTCS(n, m, u0, u1, u2, Ix, It) {
 				@Override
 				protected double next(int i, int j) {
 					return values.get(i - 1, j) - c * (values.get(i - 1, j + 1) - values.get(i - 1, j - 1)) / 2 + 
@@ -119,12 +116,39 @@ public class Main2 {
 		for (int k = 0; k < param.length; k++) {
 			Interval It = new Interval(0, param[k]);
 			int n = (int) (param[k] / delta_t);
-			WarmingBeam wb = new WarmingBeam(n, m, u0, u1, u2, Ix, It) {
+			FTCS wb = new FTCS(n, m, u0, u1, u2, Ix, It) {
 				@Override
 				protected double next(int i, int j) {
-					return 0;
+					double v;
+					if (j <= 1) {
+						v = values.get(i - 1, j) - c * (values.get(i - 1, j + 1) - values.get(i - 1, j - 1)) / 2;
+					} else {
+						v = values.get(i - 1 , j) - 
+						c * (3 * values.get(i - 1, j) 
+						- 4 * values.get(i - 1, j - 1) 
+						+ values.get(i - 1, j - 2)) / 2 + 
+						c * c * (values.get(i - 1, j - 2) - 
+						2 * values.get(i - 1, j - 1) 
+						+ values.get(i - 1, j)) / 2;
+					}
+					return v;
 				}
 			};
+			wb.solve();
+
+			data = wb.getValues();
+			row = data.getRowSize();
+			col = data.getColumnSize();
+
+			try {
+				writer = new PrintWriter(new File("wb" + String.valueOf(k)));
+				for (int i = 0; i < col; i++) {
+					writer.println(data.get(row - 1, i));
+				}
+				writer.close();
+			} catch (Exception ex) {
+				ex.printStackTrace();
+			}
 		}
 	}
 }

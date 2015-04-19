@@ -2,12 +2,14 @@ import matrix.TriDiagonalMatrix;
 import matrix.vector.Vector;
 import matrix.Matrix;
 
+import function.Function;
+
 import equation.LinearEquations;
 
 import util.Interval;
 
 public class Main3 {
-	
+
 	public static void main(String[] args) {
 		double phi_0 = 0.0;
 		double phi_l = 1.0;
@@ -16,6 +18,13 @@ public class Main3 {
 		double L = 1.0;
 		double[] Peclets = {1.0, 2.0, 5.0, 10.0};
 	
+		Function analytic = new Function() {
+			@Override
+			public double value(double x) {
+				return phi_0 + 1 / (Math.exp(Pe) - 1) * (phi_l - phi_0) * (Math.exp(Pe * x / L) - 1);
+			}
+		};
+		
 		Interval Ix = new Interval(0, L);
 		//TDMA
 		for (int k = 0; k < Peclets.length; k++) {
@@ -45,10 +54,10 @@ public class Main3 {
 			b.set(n - 1, (-0.5 * peclet + 1) * phi_l);
 			
 			Vector v = LinearEquations.solve(m, b);
-
+			
 			for (int i = 0; i < n; i ++) {
 				double x = Ix.getLeft() + (i + 1) * delta_x;
-				double y = phi_0 + 1 / (Math.exp(Pe) - 1) * (phi_l - phi_0) * (Math.exp(Pe * x / L) - 1);
+				double y = analytic.value(x);
 				System.out.printf("%e\t%e\t%e\n", x, v.get(i), y);
 			}
 			System.out.println();
@@ -80,11 +89,19 @@ public class Main3 {
 			m.set(n - 1, n - 1, 2);
 			
 			b.set(n - 1, (-0.5 * peclet + 1) * phi_l);
-
+			
 			Vector v0 = new Vector(n);
 			v0.set(0, 1);
-		
+			Vector v = LinearEquations.jacobiInterationSolve(m, b, v0, 1e-15, 10000);
+
+			for (int i = 0; i < n; i++) {
+				double x = Ix.getLeft() + (i + 1) * delta_x;
+				double y = analytic.value(x);
+				System.out.printf("%e\t%e\t%e\n", x, v.get(i), y);
+			}
+			System.out.println();
 		}
+
 		//Gauss-Seidel
 
 	}

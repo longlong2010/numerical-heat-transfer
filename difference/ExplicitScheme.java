@@ -4,9 +4,9 @@ import function.Function;
 import matrix.Matrix;
 import util.Interval;
 
-public abstract class FTCS extends FiniteDifference {
+public abstract class ExplicitScheme extends FiniteDifference {
 
-	public FTCS(int m, int n, Function f, Function a, Function b, Interval Ix, Interval It) {
+	public ExplicitScheme(int m, int n, Function f, Function a, Function b, Interval Ix, Interval It) {
 		super(m, n, f, a, b, Ix, It);
 	}
 

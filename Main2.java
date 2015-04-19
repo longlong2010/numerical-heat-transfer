@@ -4,7 +4,7 @@ import util.Interval;
 
 import matrix.Matrix;
 
-import difference.FTCS;
+import difference.ExplicitScheme;;
 
 import java.io.PrintWriter;
 import java.io.File;
@@ -40,7 +40,7 @@ public class Main2 {
 		};
 
 		double[] param = {0.2, 2.0, 10.0};	
-		double c = 0.5;
+		double c = 0.1;
 		double a = 1;
 		int m = 300;
 
@@ -57,7 +57,7 @@ public class Main2 {
 			Interval It = new Interval(0, param[k]);
 			int n = (int) (param[k] / delta_t);
 		
-			FTCS lf = new FTCS(n, m, u0, u1, u2, Ix, It) {
+			ExplicitScheme lf = new ExplicitScheme(n, m, u0, u1, u2, Ix, It) {
 				@Override
 				protected double next(int i, int j) {
 					return -c * (values.get(i - 1, j + 1) - values.get(i - 1, j - 1)) / 2 
@@ -87,7 +87,7 @@ public class Main2 {
 			Interval It = new Interval(0, param[k]);
 			int n = (int) (param[k] / delta_t);
 			
-			FTCS lw = new FTCS(n, m, u0, u1, u2, Ix, It) {
+			ExplicitScheme lw = new ExplicitScheme(n, m, u0, u1, u2, Ix, It) {
 				@Override
 				protected double next(int i, int j) {
 					return values.get(i - 1, j) - c * (values.get(i - 1, j + 1) - values.get(i - 1, j - 1)) / 2 + 
@@ -116,20 +116,35 @@ public class Main2 {
 		for (int k = 0; k < param.length; k++) {
 			Interval It = new Interval(0, param[k]);
 			int n = (int) (param[k] / delta_t);
-			FTCS wb = new FTCS(n, m, u0, u1, u2, Ix, It) {
+			ExplicitScheme wb = new ExplicitScheme(n, m, u0, u1, u2, Ix, It) {
 				@Override
 				protected double next(int i, int j) {
 					double v;
-					if (j <= 1) {
-						v = values.get(i - 1, j) - c * (values.get(i - 1, j + 1) - values.get(i - 1, j - 1)) / 2;
+					if (c > 0) {
+						if (j <= 1) {
+							v = values.get(i - 1, j) - c * (values.get(i - 1, j + 1) - values.get(i - 1, j - 1)) / 2;
+						} else {
+							v = values.get(i - 1 , j) - 
+								c * (3 * values.get(i - 1, j) 
+										- 4 * values.get(i - 1, j - 1) 
+										+ values.get(i - 1, j - 2)) / 2 + 
+								c * c * (values.get(i - 1, j - 2) - 
+										2 * values.get(i - 1, j - 1) 
+										+ values.get(i - 1, j)) / 2;
+						}
 					} else {
-						v = values.get(i - 1 , j) - 
-						c * (3 * values.get(i - 1, j) 
-						- 4 * values.get(i - 1, j - 1) 
-						+ values.get(i - 1, j - 2)) / 2 + 
-						c * c * (values.get(i - 1, j - 2) - 
-						2 * values.get(i - 1, j - 1) 
-						+ values.get(i - 1, j)) / 2;
+						int col = values.getColumnSize();
+						if (j >= col - 2) {
+							v = values.get(i - 1, j) - c * (values.get(i - 1, j + 1) - values.get(i - 1, j - 1)) / 2;
+						} else {
+							v = values.get(i - 1 , j) + 
+								c * (3 * values.get(i - 1, j) 
+										- 4 * values.get(i - 1, j + 1) 
+										+ values.get(i - 1, j + 2)) / 2 + 
+								c * c * (values.get(i - 1, j + 2) - 
+										2 * values.get(i - 1, j + 1) 
+										+ values.get(i - 1, j)) / 2;
+						}
 					}
 					return v;
 				}

@@ -10,9 +10,9 @@ import equation.LinearEquations;
 
 import util.Interval;
 
-public abstract class BTCS extends FiniteDifference {
+public abstract class ImplicitScheme extends FiniteDifference {
 	
-	public BTCS(int m, int n, Function f, Function a, Function b, Interval Ix, Interval It) {
+	public ImplicitScheme(int m, int n, Function f, Function a, Function b, Interval Ix, Interval It) {
 		super(m, n, f, a, b, Ix, It);
 	}
 

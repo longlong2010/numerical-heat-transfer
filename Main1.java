@@ -7,9 +7,8 @@ import matrix.Matrix;
 import matrix.vector.Vector;
 import matrix.TriDiagonalMatrix;
 
-import difference.FTCS;
-import difference.BTCS;
-import difference.CNCS;
+import difference.ExplicitScheme;
+import difference.ImplicitScheme;
 
 import java.io.PrintWriter;
 import java.io.File;
@@ -74,7 +73,7 @@ public class Main1 {
 				int N = (int) (It.getLength() / delta_t);
 
 				//FTCS
-				FTCS ftcs = new FTCS(N, M, f, a, b, Ix, It) {
+				ExplicitScheme ftcs = new ExplicitScheme(N, M, f, a, b, Ix, It) {
 					@Override
 						protected double next(int i, int j) {
 							double delta_x = getDeltaX();
@@ -115,8 +114,8 @@ public class Main1 {
 				double delta_x = Ix.getLength() / M;
 				double delta_t = sigma * delta_x * delta_x / nu;
 				int N = (int) (It.getLength() / delta_t);
-				//BTCS
-				BTCS btcs = new BTCS(N, M, f, a, b, Ix, It) {
+				//
+				ImplicitScheme btcs = new ImplicitScheme(N, M, f, a, b, Ix, It) {
 					@Override
 						protected void next(TriDiagonalMatrix m, Vector b, int i, int j) {
 							double delta_x = getDeltaX();
@@ -160,7 +159,7 @@ public class Main1 {
 				double delta_t = sigma * delta_x * delta_x / nu;
 				int N = (int) (It.getLength() / delta_t);
 				//CNCS
-				CNCS cncs = new CNCS(N, M, f, a, b, Ix, It) {
+				ImplicitScheme cncs = new ImplicitScheme(N, M, f, a, b, Ix, It) {
 					@Override
 						protected void next(TriDiagonalMatrix m, Vector b, int i, int j) {
 							double delta_x = getDeltaX();

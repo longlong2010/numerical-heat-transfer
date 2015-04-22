@@ -58,6 +58,47 @@ public class LinearEquations {
 		return v1;
 	}
 
+	public static Vector gaussSeidelInterationSolve(Matrix m, Vector b, Vector v0, double eps, int max_step) {
+		int size = m.getRowSize();
+		Vector v1 = v0;
+		for (int i = 0; i < max_step; i++) {
+			Vector delta = new Vector(size);
+			for (int j = 0; j < size; j++) {
+				double s = 0;
+				for (int k = 0; k < size; k++) {
+					s += m.get(j, k) * v1.get(k);
+				}
+				delta.set(j, (b.get(j) - s) / m.get(j, j));
+				v1.set(j, v1.get(j) + delta.get(j));
+			}
+			if (delta.length() < eps) {
+				break;
+			}
+		}
+		return v1;
+	}
+
+	public static Vector underRelaxationInterationSolve(Matrix m, Vector b, Vector v0, double omiga, double eps, int max_step) {
+		int size = m.getRowSize();
+		Vector v1 = v0;
+		for (int i = 0; i < max_step; i++) {
+			Vector delta = new Vector(size);
+			for (int j = 0; j < size; j++) {
+				double s = 0;
+				for (int k = 0; k < size; k++) {
+					s += m.get(j, k) * v1.get(k);
+				}
+				delta.set(j, (b.get(j) - s) / m.get(j, j));
+				v1.set(j, omiga * (v1.get(j) + delta.get(j)) + (1 - omiga) * v0.get(j));
+			}
+			v0 = v1;
+			if (delta.length() < eps) {
+				break;
+			}
+		}
+		return v1;
+	}
+
 	public static void main(String[] args) {
 		TriDiagonalMatrix m = new TriDiagonalMatrix(5);
 		m.set(0, 0, 2);

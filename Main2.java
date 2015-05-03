@@ -40,7 +40,7 @@ public class Main2 {
 		};
 
 		double[] param = {0.2, 2.0, 10.0};	
-		double c = 0.1;
+		double c = 0.5;
 		double a = 1;
 		int m = 300;
 
@@ -60,8 +60,26 @@ public class Main2 {
 			ExplicitScheme lf = new ExplicitScheme(n, m, u0, u1, u2, Ix, It) {
 				@Override
 				protected double next(int i, int j) {
-					return -c * (values.get(i - 1, j + 1) - values.get(i - 1, j - 1)) / 2 
-					+ (values.get(i - 1, j + 1) + values.get(i - 1, j - 1)) / 2;
+					return formula(values.get(i - 1, j - 1), values.get(i - 1, j), values.get(i - 1, j + 1));
+				}
+
+				private double formula(double k1, double k2, double k3) {
+					return -c * (k3 - k1) / 2 + (k3 + k1) / 2;
+				}
+
+				@Override
+				public void solve() {
+					int step = this.values.getRowSize();
+					int m = this.values.getColumnSize();
+					for (int i = 1; i < step; i++) {
+						double v0 = formula(values.get(i - 1, m - 2), values.get(i - 1, 0), values.get(i - 1, 1));
+						this.values.set(i, 0, v0);
+						for (int j = 1; j < m - 1; j++) {
+							double v = next(i, j);
+							this.values.set(i, j, v);
+						}
+						this.values.set(i, m - 1, v0);
+					}
 				}
 			};
 			
@@ -90,8 +108,26 @@ public class Main2 {
 			ExplicitScheme lw = new ExplicitScheme(n, m, u0, u1, u2, Ix, It) {
 				@Override
 				protected double next(int i, int j) {
-					return values.get(i - 1, j) - c * (values.get(i - 1, j + 1) - values.get(i - 1, j - 1)) / 2 + 
-							c * c * (values.get(i - 1, j + 1) - 2 * values.get(i - 1, j) + values.get(i - 1, j - 1)) / 2;
+					return formula(values.get(i - 1, j - 1), values.get(i - 1, j), values.get(i - 1, j + 1));
+				}
+				
+				private double formula(double k1, double k2, double k3) {
+					return k2 - c * (k3 - k1) / 2 + c * c * (k3 - 2 * k2 + k3) / 2;
+				}
+
+				@Override
+				public void solve() {
+					int step = this.values.getRowSize();
+					int m = this.values.getColumnSize();
+					for (int i = 1; i < step; i++) {
+						double v0 = formula(values.get(i - 1, m - 2), values.get(i - 1, 0), values.get(i - 1, 1));
+						this.values.set(i, 0, v0);
+						for (int j = 1; j < m - 1; j++) {
+							double v = next(i, j);
+							this.values.set(i, j, v);
+						}
+						this.values.set(i, m - 1, v0);
+					}
 				}
 			};
 			lw.solve();
@@ -119,34 +155,38 @@ public class Main2 {
 			ExplicitScheme wb = new ExplicitScheme(n, m, u0, u1, u2, Ix, It) {
 				@Override
 				protected double next(int i, int j) {
-					double v;
-					if (c > 0) {
-						if (j <= 1) {
-							v = values.get(i - 1, j) - c * (values.get(i - 1, j + 1) - values.get(i - 1, j - 1)) / 2;
-						} else {
-							v = values.get(i - 1 , j) - 
-								c * (3 * values.get(i - 1, j) 
-										- 4 * values.get(i - 1, j - 1) 
-										+ values.get(i - 1, j - 2)) / 2 + 
-								c * c * (values.get(i - 1, j - 2) - 
-										2 * values.get(i - 1, j - 1) 
-										+ values.get(i - 1, j)) / 2;
+					int m = this.values.getColumnSize();
+					double k1 = values.get(i - 1, j);
+					
+					int j1 = j - 1 < 0 ? m - 1 + j - 1 : j - 1;
+					int j2 = j + 1 > m - 1 ? j + 1 - (m - 1) : j + 1;
+					double k2 = c > 0 ? values.get(i - 1, j1) : values.get(i - 1, j2);
+
+					int j3 = j - 2 < 0 ? m - 1 + j - 2 : j - 2;
+					int j4 = j + 2 > m - 1 ? j + 2 - (m - 1) : j + 2;
+					double k3 = c > 0 ? values.get(i - 1, j3) : values.get(i - 1, j4);
+					
+					return formula(k1, k2, k3);
+				}
+
+				private double formula(double k1, double k2, double k3) {
+					return k1 - Math.signum(c) * c * (3 * k1 - 4 * k2 + k3) / 2 + c * c * (k3 - 2 * k2 + k1) / 2;
+				}
+
+				@Override
+				public void solve() {
+					int step = this.values.getRowSize();
+					int m = this.values.getColumnSize();
+					for (int i = 1; i < step; i++) {
+						double v0 = c > 0 ? formula(values.get(i - 1, 0), values.get(i - 1, m - 2), values.get(i - 1, m - 3)) 
+										  : formula(values.get(i - 1, 0), values.get(i - 1, 1), values.get(i - 1, 2));
+						this.values.set(i, 0, v0);
+						for (int j = 1; j < m - 1; j++) {
+							double v = next(i, j);
+							this.values.set(i, j, v);
 						}
-					} else {
-						int col = values.getColumnSize();
-						if (j >= col - 2) {
-							v = values.get(i - 1, j) - c * (values.get(i - 1, j + 1) - values.get(i - 1, j - 1)) / 2;
-						} else {
-							v = values.get(i - 1 , j) + 
-								c * (3 * values.get(i - 1, j) 
-										- 4 * values.get(i - 1, j + 1) 
-										+ values.get(i - 1, j + 2)) / 2 + 
-								c * c * (values.get(i - 1, j + 2) - 
-										2 * values.get(i - 1, j + 1) 
-										+ values.get(i - 1, j)) / 2;
-						}
+						this.values.set(i, m - 1, v0);
 					}
-					return v;
 				}
 			};
 			wb.solve();
